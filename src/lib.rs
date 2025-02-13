@@ -6,6 +6,7 @@ use syn::{
     parse_macro_input, Attribute, Expr, ExprLit, ItemFn, Lit, LitStr, Meta, MetaNameValue,
 };
 
+
 /// A procedural macro that generates a function to add API documentation to a route.
 ///
 /// This macro processes doc comments above the function and extracts:
@@ -40,6 +41,7 @@ pub fn aide_docs(args: TokenStream, item: TokenStream) -> TokenStream {
     let expanded = quote! {
         #input
 
+        /// Generated function for Aide docs
         pub fn #aide_docs_fn(
         ) -> impl FnOnce(aide::transform::TransformOperation<'_>) -> aide::transform::TransformOperation<'_>
         {
