@@ -1,0 +1,15 @@
+[package]
+name = "aide-axum-utils"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+aide = { version = "0.14.1", features = [
+    "axum",
+    "axum-extra-cookie",
+    "axum-extra-headers",
+    "macros",
+    "scalar",
+    "swagger",
+] }
+axum = "0.8.1"
