@@ -14,6 +14,8 @@ use axum::{
     response::{IntoResponse, Response as AxumResponse},
 };
 
+pub use paste;
+
 /// Wraps an API router to add tags to all its routes
 pub struct TagApiRouter<S> {
     inner: ApiRouter<S>,
