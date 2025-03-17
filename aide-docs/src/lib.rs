@@ -51,6 +51,7 @@ pub fn aide_docs(args: TokenStream, item: TokenStream) -> TokenStream {
     let expanded = quote! {
         #input
 
+        /// Generated function for Aide docs.
         pub fn #aide_docs_fn(
         ) -> impl FnOnce(aide::transform::TransformOperation<'_>) -> aide::transform::TransformOperation<'_>
         {
