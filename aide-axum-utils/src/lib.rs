@@ -13,6 +13,7 @@ use axum::{
     http::{HeaderMap, StatusCode},
     response::{IntoResponse, Response as AxumResponse},
 };
+use paste::paste;
 
 /// Wraps an API router to add tags to all its routes
 pub struct TagApiRouter<S> {
