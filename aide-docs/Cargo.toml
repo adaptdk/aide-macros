@@ -1,13 +1,12 @@
 [package]
 name = "aide-docs"
-version = "1.0.0"
-edition = "2021"
+edition.workspace = true
+version.workspace = true
 
 [dependencies]
-syn = { version = "2.0.96", features = ["full"] }
-quote = "1.0.38"
-paste = "1.0.15"
-proc-macro2 = "1.0.93"
+syn = { version = "2.0.100", features = ["full"] }
+quote = "1.0.40"
+proc-macro2 = "1.0.94"
 
 [lib]
 proc-macro = true

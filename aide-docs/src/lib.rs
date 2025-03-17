@@ -6,14 +6,18 @@ use syn::{
     parse_macro_input, Attribute, Expr, ExprLit, ItemFn, Lit, LitStr, Meta, MetaNameValue,
 };
 
-
 /// A procedural macro that generates a function to add API documentation to a route.
 ///
 /// This macro processes doc comments above the function and extracts:
 /// - A summary (first line of the doc comment)
 /// - A description (subsequent lines of doc comments)
 ///
-/// It also accepts an optional `tag` parameter to categorize the route.
+/// **Optional parameters**
+///
+/// - `tag` - Categorize the route: `#[aide_docs(tag = "Users")]`. If tagging multiple routes in the
+///   same router, consider using [TagApiRouter] instead.
+///
+/// - `deprecated` - Mark the route as deprecated: `#[aide_docs(deprecated)]`
 #[proc_macro_attribute]
 pub fn aide_docs(args: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as ItemFn);
@@ -29,24 +33,31 @@ pub fn aide_docs(args: TokenStream, item: TokenStream) -> TokenStream {
     // Parse the macro invocation's arguments, adding them to the `attrs` struct.
     parse_macro_input!(args with aide_docs_parser);
 
-    // If a tag was provided, creates a bit of code which adds the tag to the route.
-    // If not, creates an empty bit of code.
-    let tag_method = match attrs.tag {
-        None => tokens_from_string(String::default()),
+    // If a tag was provided, create a snippet of code which adds the tag to the route.
+    // If not, create an empty bit of code.
+    let tag_snippet = match attrs.tag {
         Some(tag) => tokens_from_string(format!(r#".tag("{}")"#, tag)),
+        None => proc_macro2::TokenStream::default(),
     };
 
-    let aide_docs_fn = tokens_from_string(format!("aide_docs_{}", input.sig.ident));
+    let deprecated_snippet = match attrs.deprecated {
+        // Create a snippet marking the route as deprecated.
+        true => tokens_from_string(r#"op.inner_mut().deprecated = true;"#.to_string()),
+        false => proc_macro2::TokenStream::default(),
+    };
+
+    let aide_docs_fn = tokens_from_string(format!("__aide_docs_{}", input.sig.ident));
 
     let expanded = quote! {
         #input
 
-        /// Generated function for Aide docs
         pub fn #aide_docs_fn(
         ) -> impl FnOnce(aide::transform::TransformOperation<'_>) -> aide::transform::TransformOperation<'_>
         {
             move |op| {
-                op.summary(#summary).description(#description)#tag_method
+                let mut op = op.summary(#summary).description(#description)#tag_snippet;
+                #deprecated_snippet
+                op
             }
         }
     };
@@ -66,6 +77,7 @@ fn tokens_from_string(string: String) -> proc_macro2::TokenStream {
 #[derive(Default)]
 struct AideDocsAttributes {
     tag: Option<String>,
+    deprecated: bool,
 }
 
 impl AideDocsAttributes {
@@ -73,6 +85,9 @@ impl AideDocsAttributes {
     fn parse(&mut self, meta: ParseNestedMeta) -> syn::parse::Result<()> {
         if meta.path.is_ident("tag") {
             self.tag = Some(meta.value()?.parse::<LitStr>()?.value());
+            Ok(())
+        } else if meta.path.is_ident("deprecated") {
+            self.deprecated = true;
             Ok(())
         } else {
             let ident = meta
