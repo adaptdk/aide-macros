@@ -14,6 +14,8 @@ use axum::{
     response::{IntoResponse, Response as AxumResponse},
 };
 
+pub use paste;
+
 /// Wraps an API router to add tags to all its routes
 pub struct TagApiRouter<S> {
     inner: ApiRouter<S>,
@@ -134,7 +136,7 @@ pub fn simple_parameter_data(
 #[macro_export]
 macro_rules! with_aide_docs {
     ($method:ident, $handler:ident) => {
-        paste::paste! {
+        $crate::paste::paste! {
             aide::axum::routing::[< $method _with>]($handler, [<__aide_docs_ $handler>]())
         }
     };
