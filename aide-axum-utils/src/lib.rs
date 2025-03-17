@@ -134,7 +134,7 @@ pub fn simple_parameter_data(
 #[macro_export]
 macro_rules! with_aide_docs {
     ($method:ident, $handler:ident) => {
-        $crate::paste::paste! {
+        $crate::paste! {
             aide::axum::routing::[< $method _with>]($handler, [<__aide_docs_ $handler>]())
         }
     };
