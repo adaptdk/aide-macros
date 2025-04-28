@@ -39,7 +39,7 @@ dependencies = [
 
 [[package]]
 name = "aide-axum-utils"
-version = "1.1.2"
+version = "1.2.0"
 dependencies = [
  "aide",
  "axum",
@@ -48,7 +48,7 @@ dependencies = [
 
 [[package]]
 name = "aide-docs"
-version = "1.1.2"
+version = "1.2.0"
 dependencies = [
  "proc-macro2",
  "quote",

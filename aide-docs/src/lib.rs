@@ -14,10 +14,17 @@ use syn::{
 ///
 /// **Optional parameters**
 ///
-/// - `tag` - Categorize the route: `#[aide_docs(tag = "Users")]`. If tagging multiple routes in the
-///   same router, consider using [TagApiRouter] instead.
+/// Parameters are seperated with a comma.
+///
+/// - `tag` - Categorize the route: `#[aide_docs(tag = "Users")]`
+///
+///   If tagging multiple routes in the same router, consider using [TagApiRouter] instead.
 ///
 /// - `deprecated` - Mark the route as deprecated: `#[aide_docs(deprecated)]`
+///
+/// - `id` Specify an operation ID for the route: `#[aide_docs(id = "login")]`
+///
+///   Shouldn't be needed in most setups, only added for legacy reasons.
 #[proc_macro_attribute]
 pub fn aide_docs(args: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as ItemFn);
@@ -46,6 +53,12 @@ pub fn aide_docs(args: TokenStream, item: TokenStream) -> TokenStream {
         false => proc_macro2::TokenStream::default(),
     };
 
+    let id_snippet = match attrs.id {
+        // Create a snippet specifying the operation id.
+        Some(id) => tokens_from_string(format!(r#".id("{}")"#, id)),
+        None => proc_macro2::TokenStream::default(),
+    };
+
     let aide_docs_fn = tokens_from_string(format!("__aide_docs_{}", input.sig.ident));
 
     let expanded = quote! {
@@ -56,7 +69,7 @@ pub fn aide_docs(args: TokenStream, item: TokenStream) -> TokenStream {
         ) -> impl FnOnce(aide::transform::TransformOperation<'_>) -> aide::transform::TransformOperation<'_>
         {
             move |op| {
-                let mut op = op.summary(#summary).description(#description)#tag_snippet;
+                let mut op = op.summary(#summary).description(#description)#tag_snippet #id_snippet;
                 #deprecated_snippet
                 op
             }
@@ -79,6 +92,7 @@ fn tokens_from_string(string: String) -> proc_macro2::TokenStream {
 struct AideDocsAttributes {
     tag: Option<String>,
     deprecated: bool,
+    id: Option<String>,
 }
 
 impl AideDocsAttributes {
@@ -89,6 +103,9 @@ impl AideDocsAttributes {
             Ok(())
         } else if meta.path.is_ident("deprecated") {
             self.deprecated = true;
+            Ok(())
+        } else if meta.path.is_ident("id") {
+            self.id = Some(meta.value()?.parse::<LitStr>()?.value());
             Ok(())
         } else {
             let ident = meta
