@@ -13,7 +13,7 @@ use axum::{
     http::{HeaderMap, StatusCode},
     response::{IntoResponse, Response as AxumResponse},
 };
-
+use axum_extra::extract::CookieJar;
 pub use paste;
 
 /// Wraps an API router to add tags to all its routes
@@ -221,5 +221,51 @@ impl<T: IntoResponse + OperationOutput> OperationOutput for TextPlain<T> {
         operation: &mut Operation,
     ) -> Vec<(Option<u16>, OpenApiResponse)> {
         Vec::from([(Some(200), Self::operation_response(ctx, operation).unwrap())])
+    }
+}
+
+/// Responds with the specified cookie jar and response when returned from Axum routes.
+pub struct WithCookieJar<T: IntoResponse + OperationOutput>(pub CookieJar, pub T);
+
+impl<T: IntoResponse + OperationOutput> IntoResponse for WithCookieJar<T> {
+    fn into_response(self) -> AxumResponse {
+        (self.0, self.1).into_response()
+    }
+}
+
+impl<T: IntoResponse + OperationOutput> OperationOutput for WithCookieJar<T> {
+    type Inner = T;
+
+    fn inferred_responses(
+        ctx: &mut GenContext,
+        operation: &mut Operation,
+    ) -> Vec<(Option<u16>, aide::openapi::Response)> {
+        T::inferred_responses(ctx, operation)
+    }
+}
+
+/// Responds with status code `204 No Content` when returned from Axum routes.
+pub struct NoContentResponse;
+
+impl IntoResponse for NoContentResponse {
+    fn into_response(self) -> AxumResponse {
+        StatusCode::NO_CONTENT.into_response()
+    }
+}
+
+impl OperationOutput for NoContentResponse {
+    type Inner = Self;
+
+    fn inferred_responses(
+        _ctx: &mut GenContext,
+        _operation: &mut Operation,
+    ) -> Vec<(Option<u16>, aide::openapi::Response)> {
+        vec![(
+            Some(StatusCode::NO_CONTENT.as_u16()),
+            aide::openapi::Response {
+                description: "No content".into(),
+                ..Default::default()
+            },
+        )]
     }
 }
