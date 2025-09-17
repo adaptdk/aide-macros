@@ -6,4 +6,5 @@ version.workspace = true
 [dependencies]
 aide = { version = "0.14.1", features = ["axum"] }
 axum = "0.8.1"
+axum-extra = { version = "0.10", features = ["cookie"] }
 paste = "1.0.15"
