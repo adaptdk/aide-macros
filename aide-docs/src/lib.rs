@@ -14,7 +14,7 @@ use syn::{
 ///
 /// **Optional parameters**
 ///
-/// Parameters are seperated with a comma.
+/// Parameters are separated with a comma.
 ///
 /// - `tag` - Categorize the route: `#[aide_docs(tag = "Users")]`
 ///
@@ -119,8 +119,7 @@ impl AideDocsAttributes {
     }
 }
 
-/// Takes a slice of [Attribute]s, finds those that are non-empty doc comments, and returns them as
-/// [String]s.
+/// Takes a slice of [Attribute]s, finds those that are doc comments, and returns them as [String]s.
 fn collect_doc_comments(attrs: &[Attribute]) -> Vec<String> {
     let mut lines = Vec::new();
     for attr in attrs {
@@ -139,10 +138,8 @@ fn collect_doc_comments(attrs: &[Attribute]) -> Vec<String> {
             ..
         }) = &attr.meta
         {
-            // If the doc comment isn't empty, trim it and add it to `lines`
-            if !lit_str.value().is_empty() {
-                lines.push(lit_str.value().trim().into())
-            }
+            // Trim the doc comment and add it to `lines`
+            lines.push(lit_str.value().trim().into())
         }
     }
 
@@ -153,7 +150,7 @@ fn collect_doc_comments(attrs: &[Attribute]) -> Vec<String> {
 /// becomes the summary, and the remaining strings are joined with newlines to become the description.
 fn split_summary_description(lines: &[String]) -> (String, String) {
     match lines.split_first() {
-        Some((summary, desc)) => (summary.clone(), desc.join("\n")),
+        Some((summary, desc)) => (summary.clone(), desc.join("\n").trim().into()),
         None => ("".into(), "".into()),
     }
 }
